@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de lugares</title>
+</head>
+<div id="resultados"></div>
+<body>
+    <h1>Buscador de lugares</h1>
+    <div>
+        <input type="text" placeholder="Buscar lugar" id="lugar">
+        <input type="submit" value="Buscar" id="search">
+    </div>
+    </form>
+    <script>
+        const inputLugar = document.getElementById("lugar");
+        const botonBuscar = document.getElementById("search");
+        const resultados = document.getElementById("resultados");
+        const respuesta = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${lugar}&count=1&language=es&format=json`
+    );
+
+        function buscarLugar(){
+            const lugar= inputLugar.value.trim();
+            console.log(lugar);
+            
+        }
+    botonBuscar.addEventListener("click", buscarLugar)
+    </script>
+</body>
+</html>
