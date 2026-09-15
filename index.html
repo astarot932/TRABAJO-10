@@ -4,17 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App de lugares</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            color: #243447;
+            background: linear-gradient(135deg, #dbeafe, #f0f9ff);
+        }
+
+        .contenedor {
+            width: 100%;
+            max-width: 550px;
+            padding: 35px;
+            text-align: center;
+            background-color: white;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15);
+        }
+
+        .icono {
+            margin-bottom: 10px;
+            font-size: 45px;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            color: #2563eb;
+            font-size: 30px;
+        }
+
+        .descripcion {
+            margin-bottom: 25px;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        .buscador {
+            display: flex;
+            gap: 10px;
+        }
+
+        #lugar {
+            flex: 1;
+            min-width: 0;
+            padding: 13px 15px;
+            font-size: 16px;
+            border: 2px solid #dbeafe;
+            border-radius: 10px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        #lugar:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+        }
+
+        #buscar {
+            padding: 13px 22px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #2563eb;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #buscar:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        #buscar:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #resultados {
+            margin-top: 25px;
+        }
+
+        .tarjeta-resultado {
+            padding: 22px;
+            text-align: left;
+            background-color: #f8fafc;
+            border-left: 5px solid #2563eb;
+            border-radius: 12px;
+        }
+
+        .tarjeta-resultado h2 {
+            margin-bottom: 15px;
+            color: #1d4ed8;
+        }
+
+        .tarjeta-resultado ul {
+            list-style: none;
+        }
+
+        .tarjeta-resultado li {
+            padding: 9px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tarjeta-resultado li:last-child {
+            border-bottom: none;
+        }
+
+        .mensaje {
+            padding: 14px;
+            color: #475569;
+            background-color: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .mensaje-error {
+            color: #991b1b;
+            background-color: #fee2e2;
+        }
+
+        @media (max-width: 500px) {
+            .contenedor {
+                padding: 25px 20px;
+            }
+
+            .buscador {
+                flex-direction: column;
+            }
+
+            #buscar {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Buscar lugares</h1>
+    <main class="contenedor">
+        <div class="icono">📍</div>
 
-    <div>
-        <input type="text" placeholder="Buscar lugar" id="lugar">
-        <button type="button" id="buscar">Buscar</button>
-    </div>
+        <h1>Buscar lugares</h1>
 
-    <div id="resultados"></div>
+        <p class="descripcion">
+            Escribe una ciudad o un lugar para consultar su ubicación.
+        </p>
+
+        <div class="buscador">
+            <input
+                type="text"
+                placeholder="Ejemplo: Parras de la Fuente"
+                id="lugar"
+                autocomplete="off"
+            >
+
+            <button type="button" id="buscar">Buscar</button>
+        </div>
+
+        <div id="resultados"></div>
+    </main>
 
     <script>
         const inputLugar = document.getElementById("lugar");
@@ -25,11 +185,14 @@
             const lugar = inputLugar.value.trim();
 
             if (!lugar) {
-                resultados.innerHTML = "<p>Ingresa un nombre válido.</p>";
+                mostrarMensaje("Ingresa un nombre válido.", true);
+                inputLugar.focus();
                 return;
             }
 
-            resultados.innerHTML = "<p>Buscando...</p>";
+            mostrarMensaje("Buscando lugar...");
+            botonBuscar.disabled = true;
+            botonBuscar.textContent = "Buscando...";
 
             try {
                 const respuesta = await fetch(
@@ -43,29 +206,60 @@
                 const data = await respuesta.json();
 
                 if (!data.results || data.results.length === 0) {
-                    resultados.innerHTML = "<p>No se encontró el lugar.</p>";
+                    mostrarMensaje("No se encontró el lugar.", true);
                     return;
                 }
 
                 const ciudad = data.results[0];
 
                 resultados.innerHTML = `
-                    <h2>${ciudad.name}</h2>
-                    <ul>
-                        <li>País: ${ciudad.country ?? "No disponible"}</li>
-                        <li>Estado: ${ciudad.admin1 ?? "No disponible"}</li>
-                        <li>Latitud: ${ciudad.latitude}</li>
-                        <li>Longitud: ${ciudad.longitude}</li>
-                    </ul>
+                    <div class="tarjeta-resultado">
+                        <h2>📌 ${ciudad.name}</h2>
+
+                        <ul>
+                            <li>
+                                <strong>País:</strong>
+                                ${ciudad.country ?? "No disponible"}
+                            </li>
+
+                            <li>
+                                <strong>Estado:</strong>
+                                ${ciudad.admin1 ?? "No disponible"}
+                            </li>
+
+                            <li>
+                                <strong>Latitud:</strong>
+                                ${ciudad.latitude}
+                            </li>
+
+                            <li>
+                                <strong>Longitud:</strong>
+                                ${ciudad.longitude}
+                            </li>
+                        </ul>
+                    </div>
                 `;
 
                 console.log(ciudad);
             } catch (error) {
-                resultados.innerHTML =
-                    "<p>Ocurrió un error al buscar el lugar.</p>";
+                mostrarMensaje(
+                    "Ocurrió un error al buscar el lugar. Intenta nuevamente.",
+                    true
+                );
 
                 console.error(error);
+            } finally {
+                botonBuscar.disabled = false;
+                botonBuscar.textContent = "Buscar";
             }
+        }
+
+        function mostrarMensaje(mensaje, esError = false) {
+            resultados.innerHTML = `
+                <p class="mensaje ${esError ? "mensaje-error" : ""}">
+                    ${mensaje}
+                </p>
+            `;
         }
 
         botonBuscar.addEventListener("click", buscarLugar);
