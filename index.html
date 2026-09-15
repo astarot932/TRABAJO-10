@@ -1,32 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador de lugares</title>
+    <title>App de lugares</title>
 </head>
-<div id="resultados"></div>
+
 <body>
-    <h1>Buscador de lugares</h1>
+    <h1>Buscar lugares</h1>
+
     <div>
         <input type="text" placeholder="Buscar lugar" id="lugar">
-        <input type="submit" value="Buscar" id="search">
+        <button type="button" id="buscar">Buscar</button>
     </div>
-    </form>
+
+    <div id="resultados"></div>
+
     <script>
         const inputLugar = document.getElementById("lugar");
-        const botonBuscar = document.getElementById("search");
+        const botonBuscar = document.getElementById("buscar");
         const resultados = document.getElementById("resultados");
-        const respuesta = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${lugar}&count=1&language=es&format=json`
-    );
 
-        function buscarLugar(){
-            const lugar= inputLugar.value.trim();
-            console.log(lugar);
-            
+        async function buscarLugar() {
+            const lugar = inputLugar.value.trim();
+
+            if (!lugar) {
+                resultados.innerHTML = "<p>Ingresa un nombre válido.</p>";
+                return;
+            }
+
+            resultados.innerHTML = "<p>Buscando...</p>";
+
+            try {
+                const respuesta = await fetch(
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(lugar)}&count=1&language=es&format=json`
+                );
+
+                if (!respuesta.ok) {
+                    throw new Error("No se pudo consultar la API");
+                }
+
+                const data = await respuesta.json();
+
+                if (!data.results || data.results.length === 0) {
+                    resultados.innerHTML = "<p>No se encontró el lugar.</p>";
+                    return;
+                }
+
+                const ciudad = data.results[0];
+
+                resultados.innerHTML = `
+                    <h2>${ciudad.name}</h2>
+                    <ul>
+                        <li>País: ${ciudad.country ?? "No disponible"}</li>
+                        <li>Estado: ${ciudad.admin1 ?? "No disponible"}</li>
+                        <li>Latitud: ${ciudad.latitude}</li>
+                        <li>Longitud: ${ciudad.longitude}</li>
+                    </ul>
+                `;
+
+                console.log(ciudad);
+            } catch (error) {
+                resultados.innerHTML =
+                    "<p>Ocurrió un error al buscar el lugar.</p>";
+
+                console.error(error);
+            }
         }
-    botonBuscar.addEventListener("click", buscarLugar)
+
+        botonBuscar.addEventListener("click", buscarLugar);
+
+        inputLugar.addEventListener("keydown", function (evento) {
+            if (evento.key === "Enter") {
+                buscarLugar();
+            }
+        });
     </script>
 </body>
 </html>
